@@ -146,5 +146,7 @@ for s in test_data:
 X1 = seq_padding(X1)
 X2 = seq_padding(X2)
 predict_results = model.predict([X1, X2])
+labels = (np.argmax(predict_results, axis=1))
 with open(os.path.join(ROOT_PATH, 'data/bert/predict.txt'), 'w') as f:
-    f.write(predict_results)
+    for i in range(len(test_file)):
+        f.write(test_file[i][0].encode('utf-8') + '\t' + str(labels[i]) + '\n')
