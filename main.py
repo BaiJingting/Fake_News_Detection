@@ -46,9 +46,10 @@ if __name__ == "__main__":
     model = BertClassify(train=True)
     model.train(train_X, valid_X)
 
-    labels = model.predict(test_data)
-    with open(os.path.join(ROOT_PATH, "data/bert/predict.txt"), 'w') as f:
-        f.write(labels)
+    predict_results, labels = model.predict(test_data)
+    with open(os.path.join(ROOT_PATH, 'data/bert/predict.txt'), 'w') as f:
+        for i in range(test_data.shape[0]):
+            f.write(test_data.id[0].encode('utf-8') + '\t' + str(labels[i]) + '\n')
 
     # # # 评估
     # evaluate = classification_report(test_y, labels)

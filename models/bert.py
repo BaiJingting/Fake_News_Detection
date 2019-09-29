@@ -24,6 +24,7 @@ CONFIG = {
 
 
 class DataGenerator:
+
     def __init__(self, data, tokenizer, batch_size=CONFIG['batch_size']):
         self.data = data
         self.tokenizer = tokenizer
@@ -64,6 +65,7 @@ class DataGenerator:
 
 
 class OurTokenizer(Tokenizer):
+
     def _tokenize(self, text):
         R = []
         for c in text:
@@ -94,6 +96,12 @@ class BertClassify:
                 self.token_dict[token] = len(self.token_dict)
 
     def train(self, train_data, valid_data):
+        """
+        训练
+        :param train_data:
+        :param valid_data:
+        :return:
+        """
         train_D = DataGenerator(train_data, self.tokenizer)
         valid_D = DataGenerator(valid_data, self.tokenizer)
 
@@ -138,9 +146,15 @@ class BertClassify:
         )
 
     def predict(self, test_data):
+        """
+        预测
+        :param test_data:
+        :return:
+        """
         test_D = DataGenerator(test_data, self.tokenizer)
-        labels = self.model.predict_generator(test_D, use_multiprocessing=True, steps=100, verbose=1)
-        return labels
+        predict_results = self.model.predict_generator(test_D, use_multiprocessing=True, steps=100, verbose=1)
+        labels = (np.argmax(predict_results, axis=1))
+        return predict_results, labels
 
     def load(self, model_dir):
         """
