@@ -129,8 +129,8 @@ model.compile(
 model.summary()
 model.fit_generator(
     train_D.__iter__(),
-    steps_per_epoch=10,
-    epochs=1,
+    steps_per_epoch=len(train_D),
+    epochs=2,
     validation_data=valid_D.__iter__(),
     use_multiprocessing=True,
     validation_steps=len(valid_D)
