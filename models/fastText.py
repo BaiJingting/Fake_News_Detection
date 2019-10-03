@@ -31,17 +31,15 @@ class FastTextClassify:
         self.model = None
         self.model_path = model_path
 
-    def save_train_file(self, train_X, train_y, file_path):
+    def save_train_file(self, data, file_path):
         """
         将训练数据保存成特定格式的文件
-        :param train_X:
-        :param train_y:
+        :param train_data:
         :return:
         """
-        assert len(train_X) == len(train_y)
         with open(file_path, 'w') as f:
-            for i in range(len(train_X)):
-                f.write(' '.join(train_X[i]) + '\t' + '__label__' + str(train_y[i]) + '\n')
+            for i in range(len(data)):
+                f.write(' '.join(data[i][0]) + '\t' + '__label__' + str(data[i][1]) + '\n')
 
     def save_test_file(self, test_X, file_path):
         """

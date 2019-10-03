@@ -16,10 +16,11 @@ DICT_PATH = os.path.join(ROOT_PATH, 'model_files/bert/chinese_L-12_H-768_A-12/vo
 
 CONFIG = {
     'max_len': 188,
-    'batch_size': 16,
-    'epochs': 2,
+    'batch_size': 8,
+    'epochs': 3,
     'use_multiprocessing': True,
-    'model_dir': os.path.join(ROOT_PATH, 'model_files/bert')
+    'model_dir': os.path.join(ROOT_PATH, 'model_files/bert'),
+    'trainable_layers': 26
 }
 
 
@@ -50,18 +51,19 @@ class DataGenerator:
                 X2.append(x2)
                 Y.append([y])
                 if len(X1) == self.batch_size or i == idxs[-1]:
-                    X1 = self.seq_padding(X1)
-                    X2 = self.seq_padding(X2)
-                    Y = self.seq_padding(Y)
+                    X1 = seq_padding(X1)
+                    X2 = seq_padding(X2)
+                    Y = seq_padding(Y)
                     yield [X1, X2], Y
                     [X1, X2, Y] = [], [], []
 
-    def seq_padding(self, X, padding=0):
-        L = [len(x) for x in X]
-        ML = max(L)
-        return np.array([
-            np.concatenate([x, [padding] * (ML - len(x))]) if len(x) < ML else x for x in X
-        ])
+
+def seq_padding(X, padding=0):
+    L = [len(x) for x in X]
+    ML = max(L)
+    return np.array([
+        np.concatenate([x, [padding] * (ML - len(x))]) if len(x) < ML else x for x in X
+    ])
 
 
 class OurTokenizer(Tokenizer):
@@ -82,8 +84,8 @@ class BertClassify:
     def __init__(self, train=True):
         if train:
             self.bert_model = load_trained_model_from_checkpoint(config_file=CONFIG_PATH, checkpoint_file=CHECKPOINT_PATH)
-            for l in self.bert_model.layers:
-                l.trainable = True
+            for layer in self.bert_model.layers[: -CONFIG['trainable_layers']]:
+                layer.trainable = False
         self.model = None
         self.__initial_token_dict()
         self.tokenizer = OurTokenizer(self.token_dict)
@@ -151,8 +153,15 @@ class BertClassify:
         :param test_data:
         :return:
         """
-        test_D = DataGenerator(test_data, self.tokenizer)
-        predict_results = self.model.predict_generator(test_D, use_multiprocessing=True, steps=100, verbose=1)
+        X1 = []
+        X2 = []
+        for s in test_data:
+            x1, x2 = self.tokenizer.encode(first=s[:CONFIG['max_len']])
+            X1.append(x1)
+            X2.append(x2)
+        X1 = seq_padding(X1)
+        X2 = seq_padding(X2)
+        predict_results = self.model.predict([X1, X2])
         labels = (np.argmax(predict_results, axis=1))
         return predict_results, labels
 

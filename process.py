@@ -3,6 +3,7 @@
 import os
 import jieba
 import pandas as pd
+import numpy as np
 # import matplotlib.pyplot as plt
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -67,20 +68,16 @@ def split_train_test(data, X_name, y_name, train_size=0.85, test_size=None):
     :param train_size:
     :return:
     """
-    train_X = []
-    test_X = []
-    train_y = []
-    test_y = []
+    train_data = []
+    test_data = []
     if (not train_size) and test_size:
         train_size = 1 - test_size
     for i in range(data.shape[0]):
-        if i < train_size * 100:
-            train_X.append(data.loc[i][X_name].decode('utf-8'))
-            train_y.append(data.loc[i][y_name])
+        if i % 100 < train_size * 100:
+            train_data.append([data.loc[i][X_name], data.loc[i][y_name]])
         else:
-            test_X.append(data.loc[i][X_name].decode('utf-8'))
-            test_y.append(data.loc[i][y_name])
-    return train_X, test_X, train_y, test_y
+            test_data.append([data.loc[i][X_name], data.loc[i][y_name]])
+    return np.array(train_data), np.array(test_data)
 
 
 def submit_data(model, seg_fun):
@@ -94,5 +91,5 @@ def submit_data(model, seg_fun):
 
 
 if __name__ == "__main__":
-    text = '你好呀 baby'
+    text = '你好呀'
     print(get_char_seg(text))
