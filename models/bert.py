@@ -2,21 +2,25 @@
 
 import os
 import codecs
+import numpy as np
 import tensorflow as tf
 from keras.layers import *
 from keras.models import Model, load_model
-import keras_radam as Radam
+from keras.optimizers import Adam
 from keras_bert import load_trained_model_from_checkpoint, Tokenizer, get_custom_objects
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
+# initial_model = 'roeberta_zh_L-24_H-1024_A-16'
+initial_model = 'chinese_L-12_H-768_A-12'
+
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_PATH = os.path.join(ROOT_PATH, 'model_files/bert/chinese_L-12_H-768_A-12/bert_config.json')
-CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files/bert/chinese_L-12_H-768_A-12/bert_model.ckpt')
-DICT_PATH = os.path.join(ROOT_PATH, 'model_files/bert/chinese_L-12_H-768_A-12/vocab.txt')
+CONFIG_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_config.json')
+CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_model.ckpt')
+DICT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'vocab.txt')
 
 CONFIG = {
-    'max_len': 188,
-    'batch_size': 8,
+    'max_len': 300,
+    'batch_size': 16,
     'epochs': 3,
     'use_multiprocessing': True,
     'model_dir': os.path.join(ROOT_PATH, 'model_files/bert'),
@@ -84,8 +88,12 @@ class BertClassify:
     def __init__(self, train=True):
         if train:
             self.bert_model = load_trained_model_from_checkpoint(config_file=CONFIG_PATH, checkpoint_file=CHECKPOINT_PATH)
-            for layer in self.bert_model.layers[: -CONFIG['trainable_layers']]:
-                layer.trainable = False
+            # # 资源不允许的情况下只训练部分层的参数
+            # for layer in self.bert_model.layers[: -CONFIG['trainable_layers']]:
+            #     layer.trainable = False
+            # # 资源允许的话全部训练
+            for l in self.bert_model.layers:
+                l.trainable = True
         self.model = None
         self.__initial_token_dict()
         self.tokenizer = OurTokenizer(self.token_dict)
@@ -132,8 +140,8 @@ class BertClassify:
 
         self.model = Model([x1_in, x2_in], p)
         self.model.compile(
-            loss='binary_crossentropy',
-            optimizer=Radam.RAdam(1e-5),  # 用足够小的学习率
+            loss='categorical_crossentropy',
+            optimizer=Adam(1e-5),  # 用足够小的学习率
             metrics=['accuracy']
         )
         self.model.summary()
@@ -162,8 +170,7 @@ class BertClassify:
         X1 = seq_padding(X1)
         X2 = seq_padding(X2)
         predict_results = self.model.predict([X1, X2])
-        labels = (np.argmax(predict_results, axis=1))
-        return predict_results, labels
+        return predict_results
 
     def load(self, model_dir):
         """
