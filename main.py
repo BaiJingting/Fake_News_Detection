@@ -36,17 +36,18 @@ def fasttext():
     process.submit_data(fasttext_model, seg_fun)
 
 
-def bert():
-    train_data, valid_data = process.split_train_test(data, 'text', 'label', train_size=0.9)
+def bert(data, test_data):
+    train_data, valid_data = process.split_train_test(data, 'text_handle', 'label', train_size=0.9)
 
     # # # bert
     model = BertClassify(train=True)
     model.train(train_data, valid_data)
 
-    predict_results, labels = model.predict(test_data.text)
+    predict_results = model.predict(test_data.text_handle)
     with open(os.path.join(ROOT_PATH, 'data/bert/predict.txt'), 'w') as f:
         for i in range(test_data.shape[0]):
-            f.write(test_data.id[i] + '\t' + test_data.text[i] + '\t' + str(labels[i]) + '\n')
+            label = 1 if predict_results[i][0] > 0.5 else 0
+            f.write(test_data.id[i] + '\t' + test_data.text[i] + '\t' + str(label) + '\n')
 
 
 if __name__ == "__main__":
@@ -56,4 +57,7 @@ if __name__ == "__main__":
     # # 对数据做描述性统计分析，了解概况
     # process.analysis(data)
 
-    bert()
+    data['text_handle'] = data.text.map(process.pretreatment)
+    test_data['text_handle'] = test_data.text.map(process.pretreatment)
+
+    # bert(data, test_data)
