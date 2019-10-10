@@ -27,10 +27,11 @@ def analysis(data):
     print(data[data.isna().values])
 
     # # 了解文本情况
-    length = data.text.apply(lambda x: len(x.decode('utf-8')))
+    length = data.text.apply(lambda x: len(x))
     print(length.describe())
-    # 5%、10%、90%、95%分位数分别为：28、41、152、188
-    print(length.quantile(0.05), length.quantile(0.1), length.quantile(0.9), length.quantile(0.95))
+    # 5%、10%、90%、95%、98%、99%分位数分别为：28、41、152、188、294、496
+    print(length.quantile(0.05), length.quantile(0.1), length.quantile(0.9), length.quantile(0.95)
+          , length.quantile(0.98), length.quantile(0.99))
     # plt.hist(length)
     # plt.show()
 
@@ -78,6 +79,15 @@ def split_train_test(data, X_name, y_name, train_size=0.85, test_size=None):
         else:
             test_data.append([data.loc[i][X_name], data.loc[i][y_name]])
     return np.array(train_data), np.array(test_data)
+
+
+def pretreatment(text):
+    """
+    文本预处理
+    :param text:
+    :return:
+    """
+    pass
 
 
 def submit_data(model, seg_fun):
