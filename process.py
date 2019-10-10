@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import jieba
 import pandas as pd
 import numpy as np
@@ -9,42 +10,9 @@ import numpy as np
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-def analysis(data):
-    """
-    对数据做描述性统计分析，了解概况
-    :return:
-    """
-    # # 了解样本整体情况
-    # 是否有重复样本
-    print(data.text.nunique(), data.shape[0])
-    # 查看重复样本文本情况
-    print(data.groupby(by='text').filter(lambda x: x.label.count() > 1).text)
-    # 是否存在文本相同、标注不同的情况
-    print(data.groupby(by=['text', 'label']).count().shape)
-    # 正负例是否均匀
-    print(data.groupby(by='label').count())
-    # 缺失值处理（这里没有缺失值）
-    print(data[data.isna().values])
-
-    # # 了解文本情况
-    length = data.text.apply(lambda x: len(x))
-    print(length.describe())
-    # 5%、10%、90%、95%、98%、99%分位数分别为：28、41、152、188、294、496
-    print(length.quantile(0.05), length.quantile(0.1), length.quantile(0.9), length.quantile(0.95)
-          , length.quantile(0.98), length.quantile(0.99))
-    # plt.hist(length)
-    # plt.show()
-
-    # 查看文本长度在 5% 分位点以下及 95% 分位点以上的 label 情况（长度较短的一端，新闻为真的比例更大，较长的一端，新闻为假的比例更大）
-    print(data[data.text.apply(lambda x: len(x.decode('utf-8')) < length.quantile(0.05))].groupby(by='label').count())
-    print(data[data.text.apply(lambda x: len(x.decode('utf-8')) < length.quantile(0.01))].groupby(by='label').count())
-    print(data[data.text.apply(lambda x: len(x.decode('utf-8')) > length.quantile(0.95))].groupby(by='label').count())
-    print(data[data.text.apply(lambda x: len(x.decode('utf-8')) > length.quantile(0.99))].groupby(by='label').count())
-
-
 def get_char_seg(text):
     """
-    对文本切分成单字，保留英文单词
+    对文本切分成单字，保留英文单词及数字
     :param text:
     :return:
     """
@@ -83,11 +51,18 @@ def split_train_test(data, X_name, y_name, train_size=0.85, test_size=None):
 
 def pretreatment(text):
     """
-    文本预处理
-    :param text:
-    :return:
+    replace url, email and phone num by specific strings
     """
-    pass
+    text = re.sub(r"(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*,]|"
+                  r"(?:%[0-9a-fA-F][0-9a-fA-F]))+)|([a-zA-Z]+.\w+\.+[a-zA-Z0-9\/_]+)", '链接', text)
+    text = re.sub(r"1\d{10}", '手机号', text)
+    text = re.sub(r"\d{3,4}-\d{8}", '座机', text)
+    text = re.sub(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", '邮箱', text)
+    text = re.sub(r"(//@).+?[:：]", ' ', text)
+    text = re.sub(r"&.{1,6};", ' ', text)
+    text = re.sub('\r', ' ', text)
+    text = get_char_seg(text)
+    return text
 
 
 def submit_data(model, seg_fun):
@@ -101,5 +76,6 @@ def submit_data(model, seg_fun):
 
 
 if __name__ == "__main__":
-    text = '你好呀'
-    print(get_char_seg(text))
+    text = '15600926082装病我们早就说过了啊，崔老师不会这么忠实&gt;剧本吧？毫无创意//@henryhunter:据说是装病。' \
+           '//@连山居士飞扬:应该不会吧？毕竟是有病的人。//@henryhunter:网传崔大炮被抓。//@司马3忌:崔老师三天没敲锣了，城管来了？'
+    print(pretreatment(text))

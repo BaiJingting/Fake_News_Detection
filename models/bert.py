@@ -85,15 +85,18 @@ class OurTokenizer(Tokenizer):
 
 
 class BertClassify:
-    def __init__(self, train=True):
-        if train:
+    def __init__(self, initial_bert_model=True, model_path=False):
+        if initial_bert_model:
             self.bert_model = load_trained_model_from_checkpoint(config_file=CONFIG_PATH, checkpoint_file=CHECKPOINT_PATH)
-            # # 资源不允许的情况下只训练部分层的参数
-            # for layer in self.bert_model.layers[: -CONFIG['trainable_layers']]:
-            #     layer.trainable = False
-            # # 资源允许的话全部训练
-            for l in self.bert_model.layers:
-                l.trainable = True
+        else:
+            self.load(model_path)
+
+        # # 资源不允许的情况下只训练部分层的参数
+        # for layer in self.bert_model.layers[: -CONFIG['trainable_layers']]:
+        #     layer.trainable = False
+        # # 资源允许的话全部训练
+        for l in self.bert_model.layers:
+            l.trainable = True
         self.model = None
         self.__initial_token_dict()
         self.tokenizer = OurTokenizer(self.token_dict)
@@ -172,25 +175,12 @@ class BertClassify:
         predict_results = self.model.predict([X1, X2])
         return predict_results
 
-    def load(self, model_dir):
+    def load(self, model_path):
         """
         load the pre-trained model
         """
-        model_path = os.path.join(model_dir, 'bert.h5')
         try:
-            graph = tf.Graph()
-            with graph.as_default():
-                session = tf.Session()
-                with session.as_default():
-                    self.reply = load_model(
-                        str(model_path),
-                        custom_objects=get_custom_objects(),
-                        compile=False
-                        )
-                    with open(os.path.join(model_dir, 'label_map_bert.txt'), 'r') as f:
-                        self.label_map = eval(f.read())
-                    self.graph = graph
-                    self.session = session
+            self.bert_model = load_model(str(model_path), custom_objects=get_custom_objects(), compile=False)
         except Exception as ex:
             print('load error')
         return self

@@ -40,7 +40,9 @@ def bert(data, test_data):
     train_data, valid_data = process.split_train_test(data, 'text_handle', 'label', train_size=0.9)
 
     # # # bert
-    model = BertClassify(train=True)
+    # model_path = os.path.join(ROOT_PATH, 'model_files/bert/bert.h5')
+    # model = BertClassify(initial_bert_model=False, model_path=model_path)
+    model = BertClassify(initial_bert_model=True)
     model.train(train_data, valid_data)
 
     predict_results = model.predict(test_data.text_handle)
@@ -54,10 +56,7 @@ if __name__ == "__main__":
     data = pd.read_csv(os.path.join(ROOT_PATH, 'data/train.csv'), encoding='utf-8')
     test_data = pd.read_csv(os.path.join(ROOT_PATH, 'data/test_stage1.csv'), encoding='utf-8')
 
-    # # 对数据做描述性统计分析，了解概况
-    # process.analysis(data)
-
     data['text_handle'] = data.text.map(process.pretreatment)
     test_data['text_handle'] = test_data.text.map(process.pretreatment)
 
-    # bert(data, test_data)
+    bert(data, test_data)
