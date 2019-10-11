@@ -84,7 +84,9 @@ def pretreatment(text):
     text = re.sub(r"1\d{10}", '手机号', text)
     text = re.sub(r"\d{3,4}-\d{8}", '座机', text)
     text = re.sub(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", '邮箱', text)
+    # 去除微博转发中的用户昵称
     text = re.sub(r"(//@).+?[:：]", ' ', text)
+    # 去除HTML符号
     text = re.sub(r"&.{1,6};", ' ', text)
     text = re.sub('\r', ' ', text)
     text = get_char_seg(text)
