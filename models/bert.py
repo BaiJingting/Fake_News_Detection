@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import codecs
 import numpy as np
 import tensorflow as tf
@@ -14,6 +15,9 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 initial_model = 'chinese_L-12_H-768_A-12'
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_PATH)
+import process
+
 CONFIG_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_config.json')
 CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_model.ckpt')
 DICT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'vocab.txt')
@@ -143,9 +147,9 @@ class BertClassify:
 
         self.model = Model([x1_in, x2_in], p)
         self.model.compile(
-            loss='categorical_crossentropy',
+            loss='binary_crossentropy',
             optimizer=Adam(1e-5),  # 用足够小的学习率
-            metrics=['accuracy']
+            metrics=['accuracy', process.get_precision, process.get_recall, process.get_f1]
         )
         self.model.summary()
         self.model.fit_generator(
