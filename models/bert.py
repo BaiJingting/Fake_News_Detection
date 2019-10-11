@@ -18,13 +18,15 @@ ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_PATH)
 import process
 
-CONFIG_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_config.json')
-CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'bert_model.ckpt')
-DICT_PATH = os.path.join(ROOT_PATH, 'model_files/bert', initial_model, 'vocab.txt')
+model_name = 'bert'  # 'bert' / 'robert' / 'albert'
+
+CONFIG_PATH = os.path.join(ROOT_PATH, 'model_files', model_name, 'initial_model/config.json')
+CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files', model_name, 'initial_model/model.ckpt')
+DICT_PATH = os.path.join(ROOT_PATH, 'model_files', model_name, 'initial_model/vocab.txt')
 
 CONFIG = {
     'max_len': 300,
-    'batch_size': 16,
+    'batch_size': 10,
     'epochs': 3,
     'use_multiprocessing': True,
     'model_dir': os.path.join(ROOT_PATH, 'model_files/bert'),
