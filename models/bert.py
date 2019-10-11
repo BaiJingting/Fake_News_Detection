@@ -11,9 +11,6 @@ from keras.optimizers import Adam
 from keras_bert import load_trained_model_from_checkpoint, Tokenizer, get_custom_objects
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
-# initial_model = 'roeberta_zh_L-24_H-1024_A-16'
-initial_model = 'chinese_L-12_H-768_A-12'
-
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_PATH)
 import process
