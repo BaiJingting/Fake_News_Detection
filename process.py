@@ -6,8 +6,18 @@ import jieba
 import pandas as pd
 import numpy as np
 # import matplotlib.pyplot as plt
+from keras import backend as K
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+def get_char_type(c):
+    if ord(c) in range(48, 58):
+        return 'digit'
+    elif ord(c) in range(65, 91) or ord(c) in range(97, 123):
+        return 'en'
+    else:
+        return 'other'
 
 
 def get_char_seg(text):
@@ -16,7 +26,23 @@ def get_char_seg(text):
     :param text:
     :return:
     """
-    return [item for item in text]
+    ret = []
+    item = ''
+    label = 'other'  # 'en'英文字符; 'digit'数字; 'other'其他
+    for char in text:
+        char_type = get_char_type(char)
+        if char_type == 'other':
+            ret.append(item)
+            item = char
+        else:
+            if label != char_type:
+                ret.append(item)
+                item = char
+            else:
+                item += char
+        label = char_type
+    ret.append(item)
+    return ret[1:]
 
 
 def get_seg(text):
@@ -75,7 +101,42 @@ def submit_data(model, seg_fun):
     data_out.to_csv(out_path, index=False, encoding='utf-8')
 
 
+def get_precision(y_true, y_pred):
+    """Precision metric.
+    Only computes a batch-wise average of precision.
+    Computes the precision, a metric for multi-label classification of
+    how many selected items are relevant.
+    """
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+
+def get_recall(y_true, y_pred):
+    """Recall metric.
+    Only computes a batch-wise average of recall.
+    Computes the recall, a metric for multi-label classification of
+    how many relevant items are selected.
+    """
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+
+def get_f1(y_true, y_pred):
+    """
+    f1 metric
+    :param y_true:
+    :param y_pred:
+    :return:
+    """
+    precision = get_precision(y_true, y_pred)
+    recall = get_recall(y_true, y_pred)
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
+
 if __name__ == "__main__":
-    text = '15600926082装病我们早就说过了啊，崔老师不会这么忠实&gt;剧本吧？毫无创意//@henryhunter:据说是装病。' \
-           '//@连山居士飞扬:应该不会吧？毕竟是有病的人。//@henryhunter:网传崔大炮被抓。//@司马3忌:崔老师三天没敲锣了，城管来了？'
-    print(pretreatment(text))
+    text = '里面有身份证刘耀峰，现金6000左右，卡6000左右'
+    print('\n'.join(get_char_seg(text)))
