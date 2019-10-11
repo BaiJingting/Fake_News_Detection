@@ -49,7 +49,8 @@ def bert(data, test_data):
     with open(os.path.join(ROOT_PATH, 'data/bert/predict.txt'), 'w') as f:
         for i in range(test_data.shape[0]):
             label = 1 if predict_results[i][0] > 0.5 else 0
-            f.write(test_data.id[i] + '\t' + test_data.text[i] + '\t' + str(label) + '\n')
+            f.write(test_data.id[i] + '\t' + test_data.text[i] + '\t' + str(predict_results[i][0])
+                    + '\t' + str(label) + '\n')
 
 
 if __name__ == "__main__":
