@@ -81,7 +81,7 @@ class OurTokenizer(Tokenizer):
         for c in text:
             if c in self._token_dict:
                 R.append(c)
-            elif self._is_space(c):
+            elif len(c) == 1 and self._is_space(c):
                 R.append('[unused1]')  # space类用未经训练的[unused1]表示
             else:
                 R.append('[UNK]')  # 剩余的字符是[UNK]
@@ -89,9 +89,11 @@ class OurTokenizer(Tokenizer):
 
 
 class BertClassify:
-    def __init__(self, initial_bert_model=True, model_path=False):
+    def __init__(self, initial_bert_model=True, model_path=os.path.join(CONFIG['model_dir'], 'bert.h5')):
+        self.initial_bert_model = initial_bert_model
         if initial_bert_model:
-            self.bert_model = load_trained_model_from_checkpoint(config_file=CONFIG_PATH, checkpoint_file=CHECKPOINT_PATH)
+            self.bert_model = load_trained_model_from_checkpoint(config_file=CONFIG_PATH,
+                                                                 checkpoint_file=CHECKPOINT_PATH)
         else:
             self.load(model_path)
 
@@ -122,13 +124,6 @@ class BertClassify:
         train_D = DataGenerator(train_data, self.tokenizer)
         valid_D = DataGenerator(valid_data, self.tokenizer)
 
-        x1_in = Input(shape=(None,))
-        x2_in = Input(shape=(None,))
-
-        x_in = self.bert_model([x1_in, x2_in])
-        x_in = Lambda(lambda x: x[:, 0])(x_in)
-        p = Dense(1, activation='sigmoid')(x_in)
-
         save = ModelCheckpoint(
             os.path.join(CONFIG['model_dir'], 'bert.h5'),
             monitor='val_acc',
@@ -144,8 +139,17 @@ class BertClassify:
             mode='auto'
         )
         callbacks = [save, early_stopping]
+        if self.initial_bert_model:
+            x1_in = Input(shape=(None,))
+            x2_in = Input(shape=(None,))
 
-        self.model = Model([x1_in, x2_in], p)
+            x_in = self.bert_model([x1_in, x2_in])
+            x_in = Lambda(lambda x: x[:, 0])(x_in)
+            p = Dense(1, activation='sigmoid')(x_in)
+            self.model = Model([x1_in, x2_in], p)
+        else:
+            self.model = self.bert_model
+
         self.model.compile(
             loss='binary_crossentropy',
             optimizer=Adam(1e-5),  # 用足够小的学习率
