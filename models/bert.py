@@ -23,7 +23,7 @@ CHECKPOINT_PATH = os.path.join(ROOT_PATH, 'model_files', model_name, 'initial_mo
 DICT_PATH = os.path.join(ROOT_PATH, 'model_files', model_name, 'initial_model/vocab.txt')
 
 CONFIG = {
-    'max_len': 256,
+    'max_len': 300,
     'batch_size': 10,
     'epochs': 3,
     'use_multiprocessing': True,
