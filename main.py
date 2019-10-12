@@ -9,7 +9,8 @@ ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 import process
 # from models.fastText import FastTextClassify
-from models.bert import BertClassify, DataGenerator, OurTokenizer
+from models.bert import BertClassify
+from models.albert import AlbertClassify
 
 
 def fasttext():
@@ -36,17 +37,18 @@ def fasttext():
     process.submit_data(fasttext_model, seg_fun)
 
 
-def bert(data, test_data):
+def bert(data, test_data, model_name='bert'):
     train_data, valid_data = process.split_train_test(data, 'text_handle', 'label', train_size=0.9)
 
     # # # bert
     # model_path = os.path.join(ROOT_PATH, 'model_files/bert/bert.h5')
-    # model = BertClassify(initial_bert_model=False, model_path=model_path)
-    model = BertClassify(initial_bert_model=True)
+    # model = BertClassify(initial_model=False, model_path=model_path)
+    Model = BertClassify if model_name == 'bert' else AlbertClassify
+    model = Model(initial_model=True)
     model.train(train_data, valid_data)
 
     predict_results = model.predict(test_data.text_handle)
-    with open(os.path.join(ROOT_PATH, 'data/bert/predict.txt'), 'w') as f:
+    with open(os.path.join(ROOT_PATH, 'data', model_name, 'predict.txt'), 'w') as f:
         for i in range(test_data.shape[0]):
             label = 1 if predict_results[i][0] > 0.5 else 0
             f.write(test_data.id[i] + '\t' + test_data.text[i] + '\t' + str(predict_results[i][0])
@@ -60,4 +62,4 @@ if __name__ == "__main__":
     data['text_handle'] = data.text.map(process.pretreatment)
     test_data['text_handle'] = test_data.text.map(process.pretreatment)
 
-    bert(data, test_data)
+    bert(data, test_data, model_name='bert')

@@ -54,9 +54,10 @@ if __name__ == "__main__":
     # text = pd.concat([data.text, debunking_data])
     # print(text.nunique(), text.shape)
 
-    data = []
-    with open(os.path.join(ROOT_PATH, 'data/rumors_v170613.json'), 'r') as f:
-        for line in f.readlines():
-            item = json.loads(line)['rumorText']
-            data.append(item)
-            print(item)
+    data85 = pd.read_excel('/Users/baijingting/Desktop/predict.xlsx')
+    data88 = pd.read_excel('/Users/baijingting/Desktop/predict_1.xlsx')
+
+    data = pd.merge(data85, data88, on='id')
+    print(data.shape)
+    data = data[data['label_x'] != data['label_y']]
+    data.to_csv('/Users/baijingting/Desktop/diff.csv')
