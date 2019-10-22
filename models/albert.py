@@ -24,7 +24,7 @@ from data_generator import DataGenerator, seq_padding
 
 CONFIG = {
     'max_len': 256,
-    'batch_size': 10,
+    'batch_size': 8,
     'epochs': 3,
     'use_multiprocessing': True,
     'model_dir': os.path.join(ROOT_PATH, 'model_files/albert'),
